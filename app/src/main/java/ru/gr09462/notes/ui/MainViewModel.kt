@@ -17,13 +17,28 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     private val noteDao: NoteDao = db.noteDao()
 
     val notes: Flow<List<Note>> = noteDao.getAll()
+    var currentNote: Note? by mutableStateOf(null)
 
-    fun saveNote(title: String, text: String){
-        Note(title = title, text = text).also { note ->
-            viewModelScope.launch {
-                noteDao.insert(note)
+    fun saveNote(
+        title: String,
+        text: String
+    ){
+        viewModelScope.launch {
+            currentNote?.let { note ->
+                Note(id = note.id, title = title, text = text).also { note ->
+                    noteDao.update(note)
+                }
+                currentNote = null
+            } ?: run {
+                Note(title = title, text = text).also { note ->
+                    noteDao.insert(note)
+                }
             }
         }
+    }
+
+    fun editNote(note: Note){
+        currentNote = note
     }
 
     fun deleteNote(note: Note){

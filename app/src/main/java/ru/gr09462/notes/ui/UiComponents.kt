@@ -26,15 +26,15 @@ import androidx.compose.ui.unit.sp
 import ru.gr09462.notes.R
 import ru.gr09462.notes.domain.database.Note
 import ru.gr09462.notes.ui.theme.NotesTheme
-import java.sql.Array
 
 @Composable
-fun NewNotePanel(
+fun EditNotePanel(
+    note: Note?,
     modifier: Modifier = Modifier,
     onSaveNote: (String, String)->Unit = { _,_ -> },
 ){
-    var title by remember { mutableStateOf("") }
-    var text by remember { mutableStateOf("") }
+    var title by remember(note) { mutableStateOf(note?.title ?: "") }
+    var text by remember (note) { mutableStateOf(note?.text ?: "") }
 
     Surface(modifier = modifier){
         Column(
@@ -63,9 +63,9 @@ fun NewNotePanel(
 
 @Preview
 @Composable
-fun NewNotePanelPreview(){
+fun EditNotePanelPreview(){
     NotesTheme(darkTheme = true) {
-        NewNotePanel(modifier = Modifier.fillMaxWidth())
+        EditNotePanel(null, modifier = Modifier.fillMaxWidth())
     }
 }
 
@@ -73,10 +73,13 @@ fun NewNotePanelPreview(){
 fun NoteCard(
     note: Note,
     modifier: Modifier = Modifier,
+    onEditNote: (Note)->Unit = {},
     onDeleteNote: (Note)->Unit = {},
 ){
 
-    Surface(modifier = modifier) {
+    Surface(modifier = modifier.clickable(onClick = {
+        onEditNote(note)
+    })) {
         Row(
             verticalAlignment = Alignment.CenterVertically,
         ) {

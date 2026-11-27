@@ -5,6 +5,7 @@ import androidx.room.Dao
 import androidx.room.Delete
 import androidx.room.Insert
 import androidx.room.Query
+import androidx.room.Transaction
 import androidx.room.Update
 import kotlinx.coroutines.flow.Flow
 
@@ -20,6 +21,11 @@ interface NoteDao {
     @Delete
     suspend fun delete(note: Note)
 
+    @Transaction
     @Query("SELECT * FROM notes ORDER BY id DESC")
-    fun getAll(): Flow<List<Note>>
+    fun getAll(): Flow<List<NoteWithCategory>>
+
+    @Transaction
+    @Query("SELECT * FROM notes WHERE categoryId=:categoryId ORDER BY id DESC")
+    fun getByCategory(categoryId: Long): Flow<List<NoteWithCategory>>
 }

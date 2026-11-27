@@ -3,17 +3,21 @@ package ru.gr09462.notes.ui
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Button
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -24,79 +28,81 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import ru.gr09462.notes.R
+import ru.gr09462.notes.domain.database.Category
 import ru.gr09462.notes.domain.database.Note
+import ru.gr09462.notes.domain.database.NoteWithCategory
 import ru.gr09462.notes.ui.theme.NotesTheme
 import java.sql.Array
+import kotlin.collections.forEach
 
 @Composable
 fun NewNotePanel(
+    categories: List<Category>,
     modifier: Modifier = Modifier,
-    onSaveNote: (String, String)->Unit = { _,_ -> },
-){
+    onSaveNote: (String, String, Long) -> Unit = { _, _, _ -> },
+) {
     var title by remember { mutableStateOf("") }
     var text by remember { mutableStateOf("") }
+    var categoryId by remember { mutableLongStateOf(1L) } // «Без категории» есть всегда
 
-    Surface(modifier = modifier){
+    Surface(modifier = modifier) {
         Column(
             modifier = Modifier.padding(8.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
         ) {
             OutlinedTextField(
-                value = title,
-                onValueChange = { title = it },
+                value = title, onValueChange = { title = it },
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = { Text("Заголовок заметки") }
             )
             OutlinedTextField(
-                value = text,
-                onValueChange = { text = it },
+                value = text, onValueChange = { text = it },
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = { Text("Текст заметки") }
             )
-            Button(onClick = { onSaveNote(title, text) }) {
-                Text(stringResource(R.string.add_note))
+            FlowRow(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                categories.forEach { category ->
+                    FilterChip(
+                        selected = category.id == categoryId,
+                        onClick = { categoryId = category.id },
+                        label = { Text(category.name) },
+                    )
+                }
             }
+            Button(
+                onClick = {
+                    onSaveNote(title, text, categoryId)
+                    title = ""; text = ""
+                },
+                enabled = title.isNotBlank(),
+            ) { Text(stringResource(R.string.add_note)) }
         }
-    }
-}
-
-@Preview
-@Composable
-fun NewNotePanelPreview(){
-    NotesTheme(darkTheme = true) {
-        NewNotePanel(modifier = Modifier.fillMaxWidth())
     }
 }
 
 @Composable
 fun NoteCard(
-    note: Note,
+    noteWithCategory: NoteWithCategory,
     modifier: Modifier = Modifier,
-    onDeleteNote: (Note)->Unit = {},
-){
-
+    onDeleteNote: (Note) -> Unit = {},
+) {
+    val note = noteWithCategory.note
     Surface(modifier = modifier) {
-        Row(
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
+        Row(verticalAlignment = Alignment.CenterVertically) {
             Column(
-                Modifier
-                    .weight(1f)
-                    .padding(8.dp),
+                Modifier.weight(1f).padding(8.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
+                Text(note.title, fontSize = 20.sp)
                 Text(
-                    note.title,
-                    fontSize = 20.sp,
+                    noteWithCategory.category.name,
+                    fontSize = 12.sp,
+                    color = MaterialTheme.colorScheme.primary,
                 )
                 HorizontalDivider(thickness = 1.dp)
                 Text(note.text)
             }
-            TextButton(
-                onClick = { onDeleteNote(note) },
-                modifier = Modifier.padding(4.dp),
-            ) {
+            TextButton(onClick = { onDeleteNote(note) }, modifier = Modifier.padding(4.dp)) {
                 Text("Удалить")
             }
         }
@@ -105,8 +111,8 @@ fun NoteCard(
 
 @Preview
 @Composable
-fun NoteCardPreview(){
+fun NoteCardPreview() {
     NotesTheme(darkTheme = true) {
-        NoteCard(Note(0, "Заголовок заметки", "Текст заметки"))
+        NoteCard(NoteWithCategory(Note(0, "Заголовок", "Текст"), Category(1, "Учёба")))
     }
 }

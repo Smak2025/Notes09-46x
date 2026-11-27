@@ -5,6 +5,23 @@ plugins {
     alias(libs.plugins.ksp)
 }
 
+// Каталог app/schemas создаём сразу, чтобы Gradle не ругался на отсутствующий input
+val roomSchemaDir: File = layout.projectDirectory.dir("schemas").asFile.also { it.mkdirs() }
+// Gradle должен знать, что этот каталог — вход/выход задачи KSP,
+// иначе ломаются инкрементальная сборка и кеш. Поэтому не просто arg("...", "..."),
+// а CommandLineArgumentProvider (рекомендация документации Room).
+class RoomSchemaArgProvider(
+    @get:InputDirectory
+    @get:PathSensitive(PathSensitivity.RELATIVE)
+    val schemaDir: File,
+) : CommandLineArgumentProvider {
+    override fun asArguments(): Iterable<String> = listOf("room.schemaLocation=${schemaDir.path}")
+}
+
+ksp {
+    arg(RoomSchemaArgProvider(roomSchemaDir))
+}
+
 android {
     namespace = "ru.gr09462.notes"
     compileSdk {
@@ -30,11 +47,17 @@ android {
         }
     }
     compileOptions {
-        sourceCompatibility = JavaVersion.VERSION_11
-        targetCompatibility = JavaVersion.VERSION_11
+        sourceCompatibility = JavaVersion.VERSION_17
+        targetCompatibility = JavaVersion.VERSION_17
     }
     buildFeatures {
         compose = true
+    }
+
+    sourceSets {
+        getByName("androidTest") {
+            assets.directories.add(roomSchemaDir.path)
+        }
     }
 }
 
@@ -64,6 +87,10 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(libs.androidx.junit)
+    // НОВОЕ: тест миграции 1 -> 2
+    androidTestImplementation(libs.junit)
+    androidTestImplementation(libs.androidx.test.runner)
+    androidTestImplementation(libs.room.testing)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
 }

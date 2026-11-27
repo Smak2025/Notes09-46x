@@ -8,6 +8,7 @@ lifecycleRuntimeKtx = "2.11.0"
 activityCompose = "1.13.0"
 kotlin = "2.4.21"
 composeBom = "2026.09.00"
+testRunner = "1.7.0"
 
 room = "2.8.5"
 lifecycle = "2.11.0"
@@ -33,6 +34,11 @@ androidx-compose-material3 = { group = "androidx.compose.material3", name = "mat
 room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
 room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }
+# НОВОЕ: MigrationTestHelper для проверки миграций
+room-testing = { module = "androidx.room:room-testing", version.ref = "room" }
+# НОВОЕ: AndroidJUnitRunner для instrumented-тестов
+androidx-test-runner = { group = "androidx.test", name = "runner", version.ref = "testRunner" }
+
 # Корутины
 coroutines-android = { module = "org.jetbrains.kotlinx:kotlinx-coroutines-android", version.ref = "coroutines" }
 # ViewModel и Compose

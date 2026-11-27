@@ -36,14 +36,15 @@ import java.sql.Array
 import kotlin.collections.forEach
 
 @Composable
-fun NewNotePanel(
+fun EditNotePanel(
+    note: NoteWithCategory?,
     categories: List<Category>,
     modifier: Modifier = Modifier,
     onSaveNote: (String, String, Long) -> Unit = { _, _, _ -> },
 ) {
-    var title by remember { mutableStateOf("") }
-    var text by remember { mutableStateOf("") }
-    var categoryId by remember { mutableLongStateOf(1L) } // «Без категории» есть всегда
+    var title by remember(note) { mutableStateOf(note?.note?.title ?: "") }
+    var text by remember(note) { mutableStateOf(note?.note?.text ?: "") }
+    var categoryId by remember(note) { mutableLongStateOf(note?.note?.categoryId ?: 1L) } // «Без категории» есть всегда
 
     Surface(modifier = modifier) {
         Column(
@@ -51,12 +52,14 @@ fun NewNotePanel(
             verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             OutlinedTextField(
-                value = title, onValueChange = { title = it },
+                value = title,
+                onValueChange = { title = it },
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = { Text("Заголовок заметки") }
             )
             OutlinedTextField(
-                value = text, onValueChange = { text = it },
+                value = text,
+                onValueChange = { text = it },
                 modifier = Modifier.fillMaxWidth(),
                 placeholder = { Text("Текст заметки") }
             )
@@ -82,25 +85,27 @@ fun NewNotePanel(
 
 @Composable
 fun NoteCard(
-    noteWithCategory: NoteWithCategory,
+    note: NoteWithCategory,
     modifier: Modifier = Modifier,
+    onEditNote: (NoteWithCategory)->Unit = {},
     onDeleteNote: (Note) -> Unit = {},
 ) {
-    val note = noteWithCategory.note
-    Surface(modifier = modifier) {
+    Surface(modifier = modifier.clickable(onClick = {
+        onEditNote(note)
+    })) {
         Row(verticalAlignment = Alignment.CenterVertically) {
             Column(
                 Modifier.weight(1f).padding(8.dp),
                 verticalArrangement = Arrangement.spacedBy(12.dp)
             ) {
-                Text(note.title, fontSize = 20.sp)
+                Text(note.note.title, fontSize = 20.sp)
                 Text(
-                    noteWithCategory.category.name,
+                    note.category.name,
                     fontSize = 12.sp,
                     color = MaterialTheme.colorScheme.primary,
                 )
                 HorizontalDivider(thickness = 1.dp)
-                Text(note.text)
+                Text(note.note.text)
             }
             TextButton(onClick = { onDeleteNote(note) }, modifier = Modifier.padding(4.dp)) {
                 Text("Удалить")

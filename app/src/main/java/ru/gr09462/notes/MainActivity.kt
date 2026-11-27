@@ -22,7 +22,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import ru.gr09462.notes.domain.database.Note
 import ru.gr09462.notes.ui.MainViewModel
-import ru.gr09462.notes.ui.NewNotePanel
+import ru.gr09462.notes.ui.EditNotePanel
 import ru.gr09462.notes.ui.NoteCard
 import ru.gr09462.notes.ui.theme.NotesTheme
 
@@ -44,7 +44,8 @@ class MainActivity : ComponentActivity() {
                     Column(
                         modifier = Modifier.padding(innerPadding)
                     ) {
-                        NewNotePanel(
+                        EditNotePanel(
+                            viewModel.currentNote,
                             categories = categories,
                             modifier = Modifier.fillMaxWidth(),
                             onSaveNote = { title, text, categoryId ->
@@ -74,6 +75,9 @@ class MainActivity : ComponentActivity() {
                             items(notes, key = { it.note.id }){
                                 NoteCard(
                                     it,
+                                    onEditNote = { note ->
+                                        viewModel.editNote(note)
+                                    },
                                     onDeleteNote = { note ->
                                         viewModel.deleteNote(note)
                                     },

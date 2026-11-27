@@ -28,6 +28,7 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
 
     private val _filter = MutableStateFlow(0L)   // 0L = «все категории»
     val filter: StateFlow<Long> = _filter.asStateFlow()
+    var currentNote: NoteWithCategory? by mutableStateOf(null)
 
     @OptIn(ExperimentalCoroutinesApi::class)
     val notes: Flow<List<NoteWithCategory>> = _filter.flatMapLatest { id ->
@@ -39,13 +40,30 @@ class MainViewModel(app: Application) : AndroidViewModel(app) {
     fun saveNote(title: String, text: String, categoryId: Long){
         Note(title = title, text = text, categoryId = categoryId).also { note ->
             viewModelScope.launch {
+                currentNote?.let { note ->
+                    Note(id = note.note.id, title = title, text = text, categoryId = categoryId).also { note ->
+                        noteDao.update(note)
+                    }
+                    currentNote = null
+                } ?: run {
+                    Note(title = title, text = text, categoryId = categoryId).also { note ->
+                        noteDao.insert(note)
+                    }
+                }
+
                 noteDao.insert(note)
             }
         }
     }
 
+    fun editNote(note: NoteWithCategory){
+        currentNote = note
+    }
+
     fun deleteNote(note: Note){
-        viewModelScope.launch { noteDao.delete(note) }
+        viewModelScope.launch {
+            noteDao.delete(note)
+        }
     }
 
 }
